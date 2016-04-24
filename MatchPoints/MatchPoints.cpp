@@ -28,6 +28,7 @@ BOOL FindPtInMatrix(vector<vector<Point64>> vec, Point64 pt, double err, int& ro
 int compareX(const void* pt1, const void* pt2);
 int compareY(const void* pt1, const void* pt2);
 void SortPoints(vector<Point64>& vec, int dir);
+void RemoveFlappyPoints(vector<Point64>& vec, double minDis, int dir);
 void MovePoints(vector<vector<Point64>> &vec, Point64 shift, Point64 ratio);
 void MoveLine(vector<Point64> &vec, Point64 shift, double ratio);
 void LSM(vector<Point64> vec, double& k, double& b);
@@ -126,6 +127,42 @@ MATCHPOINTS_API int MatchPoints(double point_dis, double err)
 	}
 }
 
+void RemoveFlappyPoints(vector<Point64>& vec, double minDis, int dir)
+{
+	size_t len = vec.size();
+	Point64* pts = new Point64[len];
+	size_t threshold = 0;
+	
+	for (size_t i = 0; i < len; i++)
+	{
+		pts[i].x = vec[i].x;
+		pts[i].y = vec[i].y;
+	}
+
+	vec.clear();
+	vec.push_back(pts[0]);
+	for (size_t i = 0; i < len; i++)
+	{
+		if (dir == 0)
+		{
+			if (pts[threshold].x + minDis < pts[i].x)
+			{
+				threshold = i;
+				vec.push_back(pts[i]);
+			}
+		}
+		if (dir == 1)
+		{
+			if (pts[threshold].y + minDis < pts[i].y)
+			{
+				threshold = i;
+				vec.push_back(pts[i]);
+			}
+		}
+	}
+	delete pts;
+}
+
 void LSM(vector<Point64> vec, double& k, double& b)
 {
 	double sum_x = 0;
@@ -177,7 +214,7 @@ MATCHPOINTS_API int MatchFromFile(char* path, double point_dis, double err, doub
 		vec_point.clear();
 		for (size_t i = 0; i < len; i++)
 		{
-			if (pts[threshold].x + 0.5 < pts[i].x)
+			if (pts[threshold].x + point_dis / 2 < pts[i].x)
 			{
 				threshold = i;
 				g_vec2.push_back(vec_point);
@@ -206,7 +243,7 @@ MATCHPOINTS_API int MatchFromFile(char* path, double point_dis, double err, doub
 		vec_point.clear();
 		for (size_t i = 0; i < len; i++)
 		{
-			if (pts[threshold].x + 0.5 < pts[i].x)
+			if (pts[threshold].x + point_dis / 2 < pts[i].x)
 			{
 				threshold = i;
 				g_vec1.push_back(vec_point);
@@ -220,11 +257,12 @@ MATCHPOINTS_API int MatchFromFile(char* path, double point_dis, double err, doub
 
 		for (size_t i = 0; i < g_vec1.size(); i++)
 		{
+			SortPoints(g_vec1[i], 1);
+			RemoveFlappyPoints(g_vec1[i], point_dis / 2.0, 1);
 			RotatePoints(g_vec1[i], g_vec1[i][0], -90);
 			LSM(g_vec1[i], k, b);
 			degree = atan(k) * 180 / CV_PI;
 			RotatePoints(g_vec1[i], g_vec1[i][0], 90.0 - degree);
-			SortPoints(g_vec1[i], 1);
 		}
 		Point64 pt_shift, pt_ratio;
 		pt_shift.x = g_vec1[0][0].x - g_vec2[0][0].x;

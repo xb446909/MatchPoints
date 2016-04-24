@@ -198,7 +198,7 @@ void CMatchPointsTestDlg::OnBnClickedBtnProc()
 		}
 		OpenLog();
 		SetPoints(1, vec_point[vec_point.size() - 1].x, vec_point[vec_point.size() - 1].y, 1);
-		str.Format(L"%d", MatchFromFile("E:\\XB\\CPU\\StandardPoints\\area2.txt", 1, 0.04, 90));
+		str.Format(L"%d", MatchFromFile("E:\\XB\\CPU\\StandardPoints\\area1.txt", 1, 0.04, 90));
 		MessageBox(str);
 		CloseLog();
 
@@ -225,7 +225,7 @@ void CMatchPointsTestDlg::OnBnClickedBtnProc()
 
 		Point64 shift;
 		shift.x = 10;
-		shift.y = -10;
+		shift.y = 0;
 
 		Mat src(680, 1350, CV_8UC3, Scalar(0));
 		ShowPoints(src, ccdpt, 20, shift, Scalar(0, 0, 255));
